@@ -5,18 +5,18 @@ import User from "../models/user.model.js";
 dotenv.config();
 
 const generateToken = (userId) => {
+
   const refreshToken = jwt.sign({ userId }, process.env.REFRESH_TOKEN_SECRET, {
     expiresIn: "7d",
   });
 
-  const accessToken = (userId) => {
-    return jwt.sign({ userId }, process.env.ACCESS_TOKEN_SECRET, {
+  const accessToken = jwt.sign({ userId }, process.env.ACCESS_TOKEN_SECRET, {
       expiresIn: "15m",
-    });
+    })
+
+      return { accessToken, refreshToken };
   };
 
-  return { accessToken, refreshToken };
-};
 
 const storeRefreshToken = async (userId, refreshToken) => {
   await redis.set(
@@ -61,11 +61,11 @@ export const register = async (req, res) => {
     });
 
     // if i use this syntax i need not to call the function user.save(); it directly returns the document
-    const newuser = await User.create({ name, email, password });
+    // const newuser = await User.create({ name, email, password });
     //Authenticate
     const { refreshToken, accessToken } = generateToken(user._id);
     await storeRefreshToken(user._id, refreshToken);
-    setCookies(res, refreshToken, accessToken);
+    setCookies(res,accessToken,refreshToken,);
 
     await user.save();
 
@@ -88,22 +88,39 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+
     if (!email || !password) {
       return res.status(400).send("Email and password are required");
     }
 
-    const user = await User.find({ email });
+    const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({ message: "User does not exist" });
     }
+
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    res.status(200).send("Login successful");
-    console.log("User logged in successfully");
-  } catch (error) {}
+    const { refreshToken, accessToken } = generateToken(user._id);
+
+    await storeRefreshToken(user._id, refreshToken);
+    setCookies(res, accessToken, refreshToken);
+
+    res.status(200).json({
+      message: "Login successful",
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };
 
 
@@ -112,7 +129,7 @@ export const logout = async (req, res) => {
     const refreshToken = req.cookies.refreshToken;
 
     if (refreshToken) {
-      const decoded = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET);
+      const decoded = jwt.verify(refreshToken,process.env.REFRESH_TOKEN_SECRET);
       await redis.del(`refreshToken:${decoded.userId}`);
     }
 
@@ -125,3 +142,37 @@ export const logout = async (req, res) => {
       .json({ message: "Error in logout controller", error: error.message });
   }
 };
+
+
+export const refreshToken = async (req,res) =>{
+
+  try {
+     const refreshToken = req.cookies.refreshToken;
+   if(!refreshToken){
+    return res.status(401).json({message:"No refresh token provided"})
+   }
+
+   const decoded = jwt.verify(refreshToken,process.env.REFRESH_TOKEN_SECRET)
+   const storedToken = await redis.get(`refreshToken:${decoded.userId}`)
+
+   if(storedToken != refreshToken){
+    return res.status(401).json({message:"Are you trying to cheat me ? LOL 😂 "})
+   }
+
+   const accessToken = jwt.sign ({userId:decoded.userId},process.env.ACCESS_TOKEN_SECRET,{expiresIn:"15m"} )
+   res.cookie("accessToken",accessToken,{
+    httpOnly:true,
+    secure:process.env.NODE_ENV==="production",
+    sameSite:"strict",
+    maxAge:15*60*1000
+
+   })
+
+   res.json({message:"token refreshed successfully"})
+
+  } catch (error) {
+    console.log("Error in refresh token controller : ",error.message);
+    res.status(401).json({message:"Internal Server Error",error:error.message })
+  }
+  
+}
