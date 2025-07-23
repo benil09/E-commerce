@@ -1,10 +1,31 @@
+import {
+  ArrowRight,
+  Eye,
+  EyeOff,
+  Loader,
+  Lock,
+  Mail,
+  User,
+} from "lucide-react";
 import { useState } from "react";
-// You can get these icons from the lucide-react library
-// npm install lucide-react
-import { ArrowRight, Eye, Mail, EyeOff, Lock, User } from "lucide-react";
+import { Link } from "react-router-dom";
+import {motion} from "framer-motion"
 
 // Main App Component
 export default function SignupPage() {
+  const loading = false;
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    console.log(formData);
+  }
+
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
 
@@ -12,7 +33,7 @@ export default function SignupPage() {
   const togglePasswordVisibility = () => {
     setPasswordVisible(!passwordVisible);
   };
-  
+
   const toggleConfirmPasswordVisibility = () => {
     setConfirmPasswordVisible(!confirmPasswordVisible);
   };
@@ -21,19 +42,24 @@ export default function SignupPage() {
     // Main container with a light gray background, covering the full screen
     <div className="flex items-center justify-center min-h-screen bg-gray-100 font-sans">
       {/* Login card container */}
-      <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-2xl shadow-xl m-4">
+      <motion.div
+        className="w-full max-w-md p-8 space-y-8 bg-white rounded-2xl shadow-xl m-4"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+      >
         {/* Header Section */}
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-800 sm:text-4xl">
             Create Account
           </h1>
           <p className="mt-2 text-gray-500">
-            Please enter your details to sign in
+            Please enter your details to sign up
           </p>
         </div>
 
         {/* Form Section */}
-        <form className="space-y-6">
+        <form className="space-y-6" onSubmit={handleSubmit}>
           {/* Full Name Input */}
           <div className="relative">
             <div className="absolute top-1/2 left-3 -translate-y-1/2">
@@ -41,6 +67,10 @@ export default function SignupPage() {
             </div>
             <input
               type="text"
+              value={formData.name}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
               placeholder="Full Name"
               className="w-full pl-12 pr-4 py-3 text-gray-700 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-300"
               required
@@ -53,7 +83,11 @@ export default function SignupPage() {
             </div>
             <input
               type="email"
-              placeholder="Email Address"
+              placeholder="youremail@gmail.com"
+              value={formData.email}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
               className="w-full pl-12 pr-4 py-3 text-gray-700 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-300"
               required
             />
@@ -65,8 +99,13 @@ export default function SignupPage() {
               <Lock className="w-5 h-5 text-gray-400" />
             </div>
             <input
-              type={passwordVisible ? "text" : "password"}
+              // type={passwordVisible ? "text" : "password"}
+              type="password"
               placeholder="Password"
+              value={formData.password}
+              onChange={(e) =>
+                setFormData({ ...formData, password: e.target.value })
+              }
               className="w-full pl-12 pr-12 py-3 text-gray-700 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-300"
               required
             />
@@ -84,7 +123,7 @@ export default function SignupPage() {
             </button>
           </div>
 
-            {/* Confirm Password Input */}
+          {/* Confirm Password Input */}
           <div className="relative">
             <div className="absolute top-1/2 left-3 -translate-y-1/2">
               <Lock className="w-5 h-5 text-gray-400" />
@@ -92,6 +131,10 @@ export default function SignupPage() {
             <input
               type={confirmPasswordVisible ? "text" : "password"}
               placeholder="Confirm Password"
+              value={formData.confirmPassword}
+              onChange={(e) =>
+                setFormData({ ...formData, confirmPassword: e.target.value })
+              }
               className="w-full pl-12 pr-12 py-3 text-gray-700 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-300"
               required
             />
@@ -119,13 +162,23 @@ export default function SignupPage() {
             </a>
           </div>
 
-          {/* Login Button */}
+          {/* Signup Button */}
           <div>
             <button
               type="submit"
               className="group relative flex justify-center w-full py-3 px-4 border border-transparent text-lg font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300 ease-in-out"
             >
-              Sign In
+              {loading ? (
+                <>
+                  <Loader
+                    className="mr-2 h-5 w-5 animate-spin mt-1"
+                    aria-hidden="true"
+                  />
+                  Loading...
+                </>
+              ) : (
+                "Sign up"
+              )}
               <span className="absolute right-0 inset-y-0 flex items-center pr-3">
                 <ArrowRight className="h-5 w-5 text-blue-400 group-hover:text-blue-300 group-hover:translate-x-1 transition-transform" />
               </span>
@@ -136,14 +189,14 @@ export default function SignupPage() {
         {/* Sign Up Link */}
         <p className="text-center text-gray-500">
           Already have an account?{" "}
-          <a
-            href="/login"
+          <Link
+            to="/login"
             className="font-semibold text-blue-600 hover:underline"
           >
             Login
-          </a>
+          </Link>
         </p>
-      </div>
+      </motion.div>
     </div>
   );
 }

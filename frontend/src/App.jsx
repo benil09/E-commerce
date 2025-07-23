@@ -6,15 +6,17 @@ import SignupPage from './pages/signupPage.jsx'
 import Navbar from './components/Navbar.jsx'
 
 function App() {
+  const isLoggedIn=false;
 
 
   return (
   
- 
- <div>
+
+
+ <div className=''>
   <Navbar/>
   <Routes>
-    <Route path='/' element={<HomePage/>} />
+    <Route path='/' element={isLoggedIn?<HomePage/>:<LoginPage/>}/>
     <Route path='/login' element={<LoginPage/>} />
     <Route path='/signup' element={<SignupPage/>} />
   </Routes>
