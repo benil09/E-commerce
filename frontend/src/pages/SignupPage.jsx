@@ -1,3 +1,5 @@
+import { motion } from "framer-motion";
+import {toast} from 'react-hot-toast'
 import {
   ArrowRight,
   Eye,
@@ -9,11 +11,10 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import {motion} from "framer-motion"
+import { useUserStore } from "../store/useUserStore";
 
 // Main App Component
 export default function SignupPage() {
-  const loading = false;
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -21,9 +22,23 @@ export default function SignupPage() {
     confirmPassword: "",
   });
 
+  const validate = () => {
+    if (!formData.name) toast.error("name is required");
+    if (!formData.email.trim()) return toast.error("email is required");
+    if (!/\S+@\S+\.\S+/.test(formData.email))
+      return toast.error("Invalid email format");
+    if (!formData.password) return toast.error("password is required");
+    if (formData.password.length < 6)
+     return toast.error("password must be atleast 6 character");
+
+    return true;
+  };
+
+  const { signup, loading } = useUserStore();
   function handleSubmit(e) {
     e.preventDefault();
-    console.log(formData);
+    const success = validate();
+    if(success===true) signup(formData);
   }
 
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -100,7 +115,7 @@ export default function SignupPage() {
             </div>
             <input
               // type={passwordVisible ? "text" : "password"}
-              type="password"
+              type={passwordVisible?"text":"password"}
               placeholder="Password"
               value={formData.password}
               onChange={(e) =>

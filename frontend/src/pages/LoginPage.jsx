@@ -2,9 +2,9 @@ import { useState } from "react";
 // You can get these icons from the lucide-react library
 // npm install lucide-react
 import { motion } from "framer-motion";
-import { ArrowRight, Eye, EyeOff, Lock, User } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, Loader, Lock, User } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Loader } from "lucide-react";
+import { useUserStore } from "../store/useUserStore";
 
 // Main App Component
 export default function LoginPage() {
@@ -12,11 +12,14 @@ export default function LoginPage() {
 
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
-  const loading = false;
+
+  const { login, loading } = useUserStore();
+
 
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log(email, password);
+    login(email, password);
   };
 
   // Toggle function for password visibility
@@ -45,7 +48,7 @@ export default function LoginPage() {
         </div>
 
         {/* Form Section */}
-        <form className="space-y-6" onClick={handleSubmit}>
+        <form className="space-y-6" onSubmit={handleSubmit}>
           {/* Email Input */}
           <div className="relative">
             <div className="absolute top-1/2 left-3 -translate-y-1/2">
@@ -70,7 +73,7 @@ export default function LoginPage() {
               type={passwordVisible ? "text" : "password"}
               placeholder="Password"
               vlaue={password}
-              onChange={(e)=>setPassword(e.target.value)}
+              onChange={(e) => setPassword(e.target.value)}
               className="w-full pl-12 pr-12 py-3 text-gray-700 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-300"
               required
             />
@@ -85,7 +88,6 @@ export default function LoginPage() {
                 <Eye className="w-5 h-5" />
               )}
             </button>
-    
           </div>
 
           {/* Forgot Password Link */}
@@ -102,10 +104,8 @@ export default function LoginPage() {
           <div>
             <button
               type="submit"
-              
               className="group relative flex justify-center w-full py-3 px-4 border border-transparent text-lg font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300 ease-in-out"
             >
-             
               <span className="absolute right-0 inset-y-0 flex items-center pr-3">
                 <ArrowRight className="h-5 w-5 text-blue-400 group-hover:text-blue-300 group-hover:translate-x-1 transition-transform" />
               </span>
